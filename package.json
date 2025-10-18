@@ -1,0 +1,14 @@
+{
+  "name": "smart-inventory-system",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "workspaces": [
+    "apps/web",
+    "apps/server"
+  ],
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint"
+  }
+}
