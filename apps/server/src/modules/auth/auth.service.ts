@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { LoginDto, RegisterDto } from './dto';
 import { ResponseUtil } from '../../shared/utils';
+import { appConfig } from '../../config';
 
 @Injectable()
 export class AuthService {
@@ -30,9 +31,10 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      // Generate JWT token
       const payload = { email: user.email, sub: user.id };
-      const accessToken = this.jwtService.sign(payload);
+      const accessToken = this.jwtService.sign(payload, {
+        expiresIn: '1y',
+      });
 
       return ResponseUtil.success(
         {
@@ -49,6 +51,7 @@ export class AuthService {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
+      console.log(error);
       throw new UnauthorizedException('Invalid credentials');
     }
   }
@@ -78,7 +81,7 @@ export class AuthService {
     }
   }
 
-  async getProfile(user: any) {
+  getProfile(user: any) {
     return ResponseUtil.success(
       {
         id: user.id,
