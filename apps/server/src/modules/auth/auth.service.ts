@@ -7,7 +7,6 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { LoginDto, RegisterDto } from './dto';
 import { ResponseUtil } from '../../shared/utils';
-import { appConfig } from '../../config';
 
 @Injectable()
 export class AuthService {
@@ -79,16 +78,5 @@ export class AuthService {
       }
       throw new ConflictException('Registration failed');
     }
-  }
-
-  getProfile(user: any) {
-    return ResponseUtil.success(
-      {
-        id: user.id,
-        name: user.displayName,
-        email: user.email,
-      },
-      'Profile retrieved successfully',
-    );
   }
 }
