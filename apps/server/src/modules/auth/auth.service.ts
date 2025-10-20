@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
+import { UsersService } from '../user/user.service';
 import { LoginDto, RegisterDto } from './dto';
 import { ResponseUtil } from '../../shared/utils';
 
