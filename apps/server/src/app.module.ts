@@ -5,7 +5,11 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/user/user.module';
 import { HealthModule } from './modules/health/health.module';
-import { WarehouseModule } from './modules/warehouse/warehouse.module';
+import { ProductModule } from './modules/product/product.module';
+import { SupplierModule } from './modules/supplier/supplier.module';
+import { CustomerModule } from './modules/customer/customer.module';
+import { StockMoveModule } from './modules/stock-move/stock-move.module';
+import { PayableLedgerModule } from './modules/payable-ledger/payable-ledger.module';
 
 @Module({
   imports: [
@@ -13,7 +17,11 @@ import { WarehouseModule } from './modules/warehouse/warehouse.module';
     AuthModule,
     UsersModule,
     HealthModule,
-    WarehouseModule,
+    ProductModule,
+    SupplierModule,
+    CustomerModule,
+    StockMoveModule,
+    PayableLedgerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
