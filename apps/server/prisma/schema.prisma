@@ -9,75 +9,143 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String      @unique
+  id           String   @id @default(uuid())
+  email        String   @unique
   passwordHash String
   displayName  String
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-  auditLogs    AuditLog[]
-  StockMove    StockMove[]
-}
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-model Warehouse {
-  id         String      @id @default(uuid())
-  code       String      @unique
-  name       String
-  address    String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  stockMoves StockMove[]
+  products  Product[]
+  suppliers Supplier[]
+  customers Customer[]
+  moves     StockMove[]
+  apLedgers PayableLedger[]
 }
 
 model Product {
-  id         String      @id @default(uuid())
-  name       String
-  unitCode   String      @default("cái")
-  costPrice  Decimal?    @db.Decimal(18, 2)
-  salePrice  Decimal?    @db.Decimal(18, 2)
-  isActive   Boolean     @default(true)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  stockMoves StockMove[]
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  unitCode  String   @default("pcs")
+  costPrice Decimal? @db.Decimal(18, 2)
+  salePrice Decimal? @db.Decimal(18, 2)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([name])
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moves StockMove[]
+
+  @@unique([userId, name]) // tên SP duy nhất trong phạm vi 1 user
+  @@index([userId, name])
 }
 
+model Supplier {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  allowDebt Boolean  @default(true) // Cho phép công nợ
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moves     StockMove[]
+  apLedgers PayableLedger[]
+
+  @@unique([userId, name]) // tên NCC duy nhất trong phạm vi 1 user
+  @@index([userId, name])
+}
+
+model Customer {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moves StockMove[]
+
+  @@unique([userId, name]) // tên KH duy nhất trong phạm vi 1 user
+  @@index([userId, name])
+}
+
+// Biến động tồn kho; dùng cho cả nhập (IN), xuất (OUT), điều chỉnh (ADJUST)
 model StockMove {
+  id        String     @id @default(uuid())
+  userId    String
+  productId String
+  qtyDelta  Decimal    @db.Decimal(18, 3) // + nhập, - xuất
+  reason    MoveReason
+  note      String?
+
+  // Trường đơn giản để gắn ngữ cảnh giao dịch
+  supplierId String? // khi nhập từ NCC
+  customerId String? // khi xuất cho KH
+
+  // Giá giao dịch (không bắt buộc); tiện để tính tiền nhập trên tín dụng
+  unitPrice Decimal? @db.Decimal(18, 2)
+
+  // Cách thanh toán cho giao dịch nhập
+  payType   PayType? // CASH | CREDIT (chỉ meaningful khi reason = IN)
+  createdAt DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  apLedgers PayableLedger[] // nếu là nhập CREDIT, sẽ có 1 ledger BILL gắn refMoveId
+
+  @@index([userId, productId])
+  @@index([userId, createdAt])
+  @@index([userId, supplierId])
+  @@index([userId, customerId])
+}
+
+// Sổ công nợ phải trả (AP) của Nhà cung cấp
+// Quy tắc: dương = tăng nợ (BILL), âm = giảm nợ (PAYMENT)
+model PayableLedger {
   id          String     @id @default(uuid())
-  productId   String
-  warehouseId String?
-  qtyDelta    Decimal    @db.Decimal(18, 3)
-  reason      MoveReason
+  userId      String
+  supplierId  String
+  type        LedgerType // BILL | PAYMENT | ADJUST
+  amountDelta Decimal    @db.Decimal(18, 2) // +BILL, -PAYMENT
   note        String?
-  createdById String?
+  refMoveId   String? // link về StockMove nhập kho (nếu có)
   createdAt   DateTime   @default(now())
 
-  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse Warehouse? @relation(fields: [warehouseId], references: [id])
-  createdBy User?      @relation(fields: [createdById], references: [id])
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  supplier Supplier   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  refMove  StockMove? @relation(fields: [refMoveId], references: [id])
 
-  @@index([productId, warehouseId])
-  @@index([createdAt])
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  action    String
-  entity    String
-  entityId  String
-  diff      Json?
-  createdAt DateTime @default(now())
-  user      User?    @relation(fields: [userId], references: [id])
-
-  @@index([entity, entityId])
+  @@index([userId, supplierId])
+  @@index([userId, createdAt])
 }
 
 enum MoveReason {
   IN
   OUT
-  ADJUST_POS
-  ADJUST_NEG
+  ADJUST
+}
+
+enum PayType {
+  CASH
+  CREDIT
+}
+
+enum LedgerType {
+  BILL // phát sinh công nợ (mua chịu)
+  PAYMENT // thanh toán NCC (giảm công nợ)
+  ADJUST // điều chỉnh số dư công nợ
 }
