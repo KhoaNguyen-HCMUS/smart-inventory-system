@@ -9,165 +9,57 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
+  id           String      @id @default(uuid())
+  email        String      @unique
   passwordHash String
   displayName  String
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   auditLogs    AuditLog[]
-  documents    Document[] @relation("DocumentCreatedBy")
-  roles        UserRole[]
-}
-
-model RoleEntity {
-  id    String     @id @default(uuid())
-  name  Role       @unique
-  users UserRole[]
-}
-
-model UserRole {
-  id     String     @id @default(uuid())
-  userId String
-  roleId String
-  role   RoleEntity @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roleId])
+  StockMove    StockMove[]
 }
 
 model Warehouse {
-  id        String        @id @default(uuid())
-  code      String        @unique
-  name      String
-  address   String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  docsFrom  Document[]    @relation("DocFromWarehouse")
-  docsTo    Document[]    @relation("DocToWarehouse")
-  ledgers   StockLedger[]
-}
-
-model Category {
-  id        String     @id @default(uuid())
-  name      String
-  parentId  String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  parent    Category?  @relation("CategoryToSelf", fields: [parentId], references: [id])
-  children  Category[] @relation("CategoryToSelf")
-  products  Product[]
-}
-
-model Unit {
-  id        String    @id @default(uuid())
-  code      String    @unique
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
+  id         String      @id @default(uuid())
+  code       String      @unique
+  name       String
+  address    String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  stockMoves StockMove[]
 }
 
 model Product {
-  id           String         @id @default(uuid())
-  sku          String         @unique
-  name         String
-  barcode      String?        @unique
-  categoryId   String?
-  unitId       String
-  costPrice    Decimal?       @db.Decimal(18, 2)
-  salePrice    Decimal?       @db.Decimal(18, 2)
-  reorderLevel Decimal?       @db.Decimal(18, 3)
-  isActive     Boolean        @default(true)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  lines        DocumentLine[]
-  category     Category?      @relation(fields: [categoryId], references: [id])
-  unit         Unit           @relation(fields: [unitId], references: [id])
-  ledgers      StockLedger[]
+  id         String      @id @default(uuid())
+  name       String
+  unitCode   String      @default("cái")
+  costPrice  Decimal?    @db.Decimal(18, 2)
+  salePrice  Decimal?    @db.Decimal(18, 2)
+  isActive   Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  stockMoves StockMove[]
 
   @@index([name])
-  @@index([sku])
-  @@index([barcode])
 }
 
-model Partner {
-  id        String      @id @default(uuid())
-  type      PartnerType
-  code      String      @unique
-  name      String
-  phone     String?
-  email     String?
-  address   String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  documents Document[]
-}
-
-model Document {
-  id              String         @id @default(uuid())
-  code            String         @unique
-  type            DocumentType
-  status          DocumentStatus @default(DRAFT)
-  warehouseFromId String?
-  warehouseToId   String?
-  partnerId       String?
-  createdById     String
-  note            String?
-  postedAt        DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  createdBy       User           @relation("DocumentCreatedBy", fields: [createdById], references: [id])
-  partner         Partner?       @relation(fields: [partnerId], references: [id])
-  warehouseFrom   Warehouse?     @relation("DocFromWarehouse", fields: [warehouseFromId], references: [id])
-  warehouseTo     Warehouse?     @relation("DocToWarehouse", fields: [warehouseToId], references: [id])
-  lines           DocumentLine[]
-  ledgers         StockLedger[]
-}
-
-model DocumentLine {
-  id         String        @id @default(uuid())
-  documentId String
-  productId  String
-  qty        Decimal       @db.Decimal(18, 3)
-  unitPrice  Decimal?      @db.Decimal(18, 2)
-  note       String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  document   Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  product    Product       @relation(fields: [productId], references: [id])
-  ledgers    StockLedger[]
-
-  @@index([documentId])
-  @@index([productId])
-}
-
-model StockLedger {
-  id          String        @id @default(uuid())
+model StockMove {
+  id          String     @id @default(uuid())
   productId   String
-  warehouseId String
-  documentId  String?
-  lineId      String?
-  qtyDelta    Decimal       @db.Decimal(18, 3)
-  createdAt   DateTime      @default(now())
-  document    Document?     @relation(fields: [documentId], references: [id])
-  line        DocumentLine? @relation(fields: [lineId], references: [id])
-  product     Product       @relation(fields: [productId], references: [id])
-  warehouse   Warehouse     @relation(fields: [warehouseId], references: [id])
+  warehouseId String?
+  qtyDelta    Decimal    @db.Decimal(18, 3)
+  reason      MoveReason
+  note        String?
+  createdById String?
+  createdAt   DateTime   @default(now())
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse Warehouse? @relation(fields: [warehouseId], references: [id])
+  createdBy User?      @relation(fields: [createdById], references: [id])
 
   @@index([productId, warehouseId])
-  @@index([documentId])
   @@index([createdAt])
-}
-
-model IdempotencyKey {
-  id        String   @id @default(uuid())
-  key       String
-  purpose   String
-  createdAt DateTime @default(now())
-
-  @@unique([key, purpose])
 }
 
 model AuditLog {
@@ -183,26 +75,9 @@ model AuditLog {
   @@index([entity, entityId])
 }
 
-enum Role {
-  ADMIN
-  MANAGER
-  STAFF
-  VIEWER
-}
-
-enum PartnerType {
-  SUPPLIER
-  CUSTOMER
-}
-
-enum DocumentType {
+enum MoveReason {
   IN
   OUT
-  TRANSFER
-}
-
-enum DocumentStatus {
-  DRAFT
-  POSTED
-  CANCELLED
+  ADJUST_POS
+  ADJUST_NEG
 }
