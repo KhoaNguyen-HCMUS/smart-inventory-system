@@ -6,7 +6,6 @@ import { AuthService } from './auth.service';
 import { UsersModule } from '../user/user.module';
 import { JwtStrategy } from '../../shared/strategies';
 import { appConfig } from '../../config';
-import * as ms from 'ms';
 
 @Module({
   imports: [
@@ -14,7 +13,7 @@ import * as ms from 'ms';
     PassportModule,
     JwtModule.register({
       secret: appConfig.jwtSecret,
-      signOptions: { expiresIn: appConfig.jwtExpiresIn as ms.StringValue },
+      signOptions: { expiresIn: '1y' },
     }),
   ],
   controllers: [AuthController],

@@ -5,8 +5,6 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/user/user.module';
 import { HealthModule } from './modules/health/health.module';
-import { UnitModule } from './modules/unit/unit.module';
-import { CategoryModule } from './modules/category/category.module';
 import { WarehouseModule } from './modules/warehouse/warehouse.module';
 
 @Module({
@@ -15,8 +13,6 @@ import { WarehouseModule } from './modules/warehouse/warehouse.module';
     AuthModule,
     UsersModule,
     HealthModule,
-    UnitModule,
-    CategoryModule,
     WarehouseModule,
   ],
   controllers: [AppController],

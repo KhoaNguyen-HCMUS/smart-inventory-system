@@ -2,30 +2,43 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { CreateWarehouseDto, UpdateWarehouseDto } from './dto';
-import { ResponseUtil } from '../../shared/utils';
 
 @Injectable()
 export class WarehouseService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createWarehouseDto: CreateWarehouseDto) {
+    // Normalize code to uppercase
+    const normalizedCode = createWarehouseDto.code.toUpperCase().trim();
+
+    // Validate input
+    if (!normalizedCode || !createWarehouseDto.name) {
+      throw new BadRequestException('Code and name are required');
+    }
+
     // Check if warehouse code already exists
     const existingWarehouse = await this.prisma.warehouse.findUnique({
-      where: { code: createWarehouseDto.code },
+      where: { code: normalizedCode },
     });
 
     if (existingWarehouse) {
       throw new ConflictException('Warehouse with this code already exists');
     }
 
+    // Create warehouse
     const warehouse = await this.prisma.warehouse.create({
-      data: createWarehouseDto,
+      data: {
+        code: normalizedCode,
+        name: createWarehouseDto.name.trim(),
+        address: createWarehouseDto.address?.trim() || null,
+      },
     });
 
-    return ResponseUtil.success(warehouse, 'Warehouse created successfully');
+    return warehouse;
   }
 
   async findAll() {
@@ -33,10 +46,7 @@ export class WarehouseService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return ResponseUtil.success(
-      warehouses,
-      'All warehouses retrieved successfully',
-    );
+    return warehouses;
   }
 
   async findOne(id: string) {
@@ -48,7 +58,7 @@ export class WarehouseService {
       throw new NotFoundException('Warehouse not found');
     }
 
-    return ResponseUtil.success(warehouse, 'Warehouse retrieved successfully');
+    return warehouse;
   }
 
   async update(id: string, updateWarehouseDto: UpdateWarehouseDto) {
@@ -61,27 +71,47 @@ export class WarehouseService {
       throw new NotFoundException('Warehouse not found');
     }
 
-    // Check if new code conflicts with existing warehouses
-    if (
-      'code' in updateWarehouseDto &&
-      updateWarehouseDto.code &&
-      updateWarehouseDto.code !== existingWarehouse.code
-    ) {
-      const codeExists = await this.prisma.warehouse.findUnique({
-        where: { code: updateWarehouseDto.code as string },
-      });
+    // Normalize code if provided
+    let normalizedCode = updateWarehouseDto.code;
+    if (updateWarehouseDto.code) {
+      normalizedCode = updateWarehouseDto.code.toUpperCase().trim();
 
-      if (codeExists) {
-        throw new ConflictException('Warehouse with this code already exists');
+      // Check if new code conflicts with existing warehouses
+      if (normalizedCode !== existingWarehouse.code) {
+        const codeExists = await this.prisma.warehouse.findUnique({
+          where: { code: normalizedCode },
+        });
+
+        if (codeExists) {
+          throw new ConflictException(
+            'Warehouse with this code already exists',
+          );
+        }
       }
     }
 
+    // Prepare update data
+    const updateData: {
+      code?: string;
+      name?: string;
+      address?: string | null;
+    } = {};
+
+    if (normalizedCode) updateData.code = normalizedCode;
+    if (updateWarehouseDto.name) {
+      updateData.name = updateWarehouseDto.name.trim();
+    }
+    if ('address' in updateWarehouseDto) {
+      updateData.address = updateWarehouseDto.address?.trim() || null;
+    }
+
+    // Update warehouse
     const warehouse = await this.prisma.warehouse.update({
       where: { id },
-      data: updateWarehouseDto,
+      data: updateData,
     });
 
-    return ResponseUtil.success(warehouse, 'Warehouse updated successfully');
+    return warehouse;
   }
 
   async remove(id: string) {
@@ -94,23 +124,22 @@ export class WarehouseService {
       throw new NotFoundException('Warehouse not found');
     }
 
-    // Check if warehouse is being used by documents
-    const documentsUsingWarehouse = await this.prisma.document.findFirst({
-      where: {
-        OR: [{ warehouseFromId: id }, { warehouseToId: id }],
-      },
+    // Check if warehouse is being used by stock moves
+    const stockMovesUsingWarehouse = await this.prisma.stockMove.findFirst({
+      where: { warehouseId: id },
     });
 
-    if (documentsUsingWarehouse) {
+    if (stockMovesUsingWarehouse) {
       throw new ConflictException(
-        'Cannot delete warehouse that is being used by documents',
+        'Cannot delete warehouse that is being used by stock moves',
       );
     }
 
+    // Delete warehouse
     await this.prisma.warehouse.delete({
       where: { id },
     });
 
-    return ResponseUtil.success(null, 'Warehouse deleted successfully');
+    return { message: 'Warehouse deleted successfully' };
   }
 }

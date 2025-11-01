@@ -3,7 +3,12 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from '../../modules/user/user.service';
 import { appConfig } from '../../config';
-import { UserPayload } from '../interfaces';
+
+export interface UserPayload {
+  id: string;
+  displayName: string;
+  email: string;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,15 +20,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any): Promise<UserPayload> {
+  async validate(payload: {
+    sub: string;
+    email: string;
+  }): Promise<UserPayload> {
     try {
       const user = await this.usersService.findById(payload.sub);
+
+      // Check if user is active
+      if (!user.isActive) {
+        throw new UnauthorizedException('Account is inactive');
+      }
+
       return {
         id: user.id,
         displayName: user.displayName,
         email: user.email,
       };
-    } catch {
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
       throw new UnauthorizedException('Invalid token');
     }
   }
