@@ -3,6 +3,7 @@ import Home from '@/pages/home.vue';
 import Products from '@/pages/products.vue';
 import Suppliers from '@/pages/suppliers.vue';
 import Customers from '@/pages/customers.vue';
+import Colors from '@/pages/colors.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 export const router = createRouter({
@@ -16,6 +17,7 @@ export const router = createRouter({
         { path: 'products', component: Products },
         { path: 'suppliers', component: Suppliers },
         { path: 'customers', component: Customers },
+        { path: 'colors', component: Colors },
       ],
     },
   ],

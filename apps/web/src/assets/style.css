@@ -1,1 +1,95 @@
 @import 'tailwindcss';
+@theme {
+  /* ===== Brand: Deep Blue Tone ===== */
+  --color-primary: #0a3d62;
+  --color-primary-hover: #083351;
+  --color-primary-active: #062941;
+  --color-primary-contrast: #ffffff;
+
+  --color-secondary: #1e90ff;
+  --color-secondary-hover: #1a7fde;
+  --color-secondary-active: #166ec0;
+  --color-secondary-contrast: #ffffff;
+
+  --color-accent: #1e90ff;
+  --color-accent-hover: #1a7fde;
+  --color-accent-contrast: #ffffff;
+
+  /* ===== Background & Surface ===== */
+  --color-bg: #f8fafc;
+  --color-bg-muted: #e6f0ff;
+  --color-bg-card: #eef4ff;
+  --color-bg-hover: #dbe8ff;
+  --color-surface: #ffffff;
+  --color-overlay: rgba(10, 61, 98, 0.4);
+
+  /* ===== Text ===== */
+  --color-text-header: #0a2540;
+  --color-text-body: #1e293b;
+  --color-text-muted: #475569;
+  --color-text-disabled: #94a3b8;
+  --color-text-contrast: #ffffff;
+
+  /* ===== Link ===== */
+  --color-link: #1e90ff;
+  --color-link-hover: #1a7fde;
+  --color-link-visited: #2563eb;
+
+  /* ===== Border / Focus ===== */
+  --color-border-light: #cbd5e1;
+  --color-border-strong: #94a3b8;
+  --color-ring: #1e90ff;
+  --color-ring-offset: #ffffff;
+
+  /* ===== Buttons ===== */
+  --color-button-bg: var(--color-primary);
+  --color-button-hover: var(--color-primary-hover);
+  --color-button-active: var(--color-primary-active);
+  --color-button-text: var(--color-primary-contrast);
+
+  --color-button-secondary-bg: var(--color-secondary);
+  --color-button-secondary-hover: var(--color-secondary-hover);
+  --color-button-secondary-text: var(--color-secondary-contrast);
+
+  --color-button-ghost-bg: transparent;
+  --color-button-ghost-hover: #eef4ff;
+  --color-button-ghost-text: #1e293b;
+
+  --color-button-danger-bg: #dc2626;
+  --color-button-danger-hover: #b91c1c;
+  --color-button-danger-text: #ffffff;
+
+  /* ===== Status ===== */
+  --color-success: #15803d;
+  --color-success-bg: #ecfdf5;
+  --color-success-border: #bbf7d0;
+  --color-success-text: #065f46;
+
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-warning-border: #fcd34d;
+  --color-warning-text: #92400e;
+
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+  --color-error-border: #fca5a5;
+  --color-error-text: #7f1d1d;
+
+  --color-info: #1e90ff;
+  --color-info-bg: #e0f2fe;
+  --color-info-border: #bae6fd;
+  --color-info-text: #0c4a6e;
+
+  /* ===== Gradients ===== */
+  --gradient-primary: linear-gradient(45deg, #1e90ff 0%, #0a3d62 100%);
+  --gradient-surface: linear-gradient(180deg, #ffffff 0%, #e6f0ff 100%);
+  --gradient-text: linear-gradient(45deg, #0a3d62 0%, #1e90ff 100%);
+
+  /* ===== Chart Palette ===== */
+  --color-chart-1: #0a3d62;
+  --color-chart-2: #1e90ff;
+  --color-chart-3: #3b82f6;
+  --color-chart-4: #60a5fa;
+  --color-chart-5: #93c5fd;
+  --color-chart-6: #1e293b;
+}
